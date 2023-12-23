@@ -1,0 +1,34 @@
+#!/bin/bash
+
+activate() {
+  echo "Installing Fish dependencies..."
+
+  # Install the required Python libraries and their dependencies quietly
+  pip install -q pytest hypothesis pygame
+
+  echo "Fish dependencies installed. You may use [fishgame --deactivate] to remove the dependencies when your session is complete."
+}
+
+deactivate() {
+  echo "Removing Fish dependencies..."
+
+  # Uninstall the installed Python libraries quietly
+  pip uninstall -q -y pytest hypothesis pygame
+
+  echo "Fish dependencies successfully removed."
+}
+
+case "$1" in
+  --activate)
+    activate
+    ;;
+  --deactivate)
+    deactivate
+    ;;
+  *)
+    echo "Usage: $0 {--activate|--deactivate}"
+    exit 1
+    ;;
+esac
+
+exit 0
