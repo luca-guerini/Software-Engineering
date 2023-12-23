@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Define the Python version and the virtual environment directory.
+PYTHON_VERSION="python3.6"
+VENV_DIR="venv"
+
+# Create a virtual environment for the specified Python version.
+echo "Creating a virtual environment with Python $PYTHON_VERSION"
+$PYTHON_VERSION -m venv $VENV_DIR
+
+# Activate the virtual environment.
+source $VENV_DIR/bin/activate
+
+# Check to ensure the virtual environment was activated.
+if [ $? -eq 0 ]; then
+    echo "Virtual environment activated successfully."
+else
+    echo "Failed to activate the virtual environment."
+    exit 1
+fi
+
+# Install the libraries from requirements.txt.
+echo "Installing libraries from requirements.txt..."
+pip install -r requirements.txt
+
+# Check to ensure the libraries were installed.
+if [ $? -eq 0 ]; then
+    echo "Libraries installed successfully."
+else
+    echo "Failed to install libraries."
+    exit 1
+fi
+
+# Deactivate the virtual environment.
+deactivate
+
+echo "Script completed successfully."
