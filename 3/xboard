@@ -1,0 +1,25 @@
+#!/usr/bin/bash
+
+# Iterate through each #-in.json file
+for infile in Tests/*-in.json; do
+    # Extract the base name without extension
+    base=$(basename -s -in.json $infile)
+
+    # Check if corresponding #-out.json file exists
+    outfile="Tests/${base}-out.json"
+    if [ -e $outfile ]; then
+        # Compare the output of the command to the contents of #-out.json
+        output=$(cat $infile | python3 Other/xboard.py)
+        expected_output=$(cat $outfile)
+
+        # Check if the outputs are equal
+        if [ "$output" == "$expected_output" ]; then
+            echo "$infile succeeded!"
+        else
+            echo "Test $infile failed!"
+        fi
+    else
+        echo "Test $infile failed! Corresponding #-out.json not found."
+    fi
+done
+
