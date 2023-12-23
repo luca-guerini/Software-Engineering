@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+#Luca Guerini
+#The purpose of this program is to indefinitely print user input,
+#unless there is no input, where 'hello world' is printed
+#If the phrase --limited is present, then the input is printed only 20 times
+import unittest
+import sys
+class xyes:
+    def main():
+        #takes the user input, and converts it into a list to check for --limited
+        inputlist = sys.argv[0:]
+        if len(inputlist)>1:
+          inputlist= inputlist[1:]
+        else:
+          inputlist[0] = ""
+        #populates isLimited using limited function
+        isLimited = limited(inputlist)
+        #populates missing_text using 
+        missing_text = hello(inputlist, isLimited)
+        count = 1
+        increment = 1
+        #limited is present, and text is provided to print
+        if isLimited and not missing_text:
+            inputlist.remove("--limited")
+        #limited is present, but text not provided to print.
+        elif isLimited and missing_text:
+            inputlist = ["hello", "world"]
+            #limited absent, and no text provided.
+        elif missing_text and not isLimited:
+            inputlist = ["hello", "world"]
+            increment = 0
+            #text provided, but limited not present.
+        else:
+            increment = 0
+                
+        while(count <= 20):
+            print(*inputlist, sep = " ")
+            count = count + increment
+#string --> boolean
+#returns true if the first item in a list of strings is "--limited", false otherwise
+def limited(limit):
+    return limit[0] == "--limited"
+
+#list, boolean --> boolean
+#returns true if the first item in a list is "" or "--limited", false otherwise
+def hello(inputs, limit):
+    return ((inputs[0] == "") or (len(inputs) == 1 and limit))
+
+
+#Class containing tests for limited and hello functions
+class TestMethods(unittest.TestCase):
+    #tests for the limited function
+    def test_limited(self):
+        self.assertTrue(limited(["--limited"]))
+        self.assertFalse(limited([""]))
+        self.assertFalse(limited(["Hello"]))
+
+    #tests for the hello function
+    def test_hello(self):
+        self.assertTrue(hello([""], False))
+        self.assertTrue(hello(["--limited"], True))
+        self.assertFalse(hello(["--Limited", "Hello", "world"], True))
+        self.assertFalse(hello(["Hello"], False))
+
+xyes.main()
