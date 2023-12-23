@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt5.QtGui import QPainter, QPixmap, QImage, QColor  # Import QColor
+from PyQt5.QtCore import Qt
+
+class Bestagon(QWidget):
+    #An xgui 'Bestagon' object is an object with 1 argument, a positive integer.
+    #Bestagon(int) -> GUI
+    #Purpose: Displays a hexagon image scaled to the user's input.
+    def __init__(self, size):
+        super().__init__()
+        self.size = size
+        self.setWindowTitle("xgui") #title of gui window
+        self.setGeometry(100, 100, 600, 600) #the starting size of the GUI window.
+
+        # Load the "bestagon.png" image
+        self.original_pixmap = QPixmap("bestagon.png") #pixmap to the image's default scaling
+        self.adjusted_width = 3 * self.size #scales the pixmap's width to 3* user input
+        self.adjusted_height = 2 * self.size #scales the pixmap's height to 2* user input
+        self.pixmap = self.original_pixmap.scaled(self.adjusted_width, self.adjusted_height) #updates the pixmap
+
+        # Store the loaded image as a class variable
+        self.my_bestagon = self.pixmap.toImage()
+    #Essentially some required boiler plate for the program.
+    #paintEvent(event) is a call that occurs automatically when a PyQt5 widget
+    #must update itself. This will occur every time when the user clicks on the image
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.drawPixmap(0, 0, self.pixmap)
+    #This piece of PyWt5 boilerplate actually does something.
+    #user click -> (Effect)
+    #Purpose: Collects the pixel RGB value of the pixel clicked on the user's monitor when inside of the GUI window.
+    #EFFECT: If the user clicks an RGB value of white (-1,0,0) it closes the program.
+    def mousePressEvent(self, event):
+        x, y = event.x(), event.y()
+
+    # Check if the clicked point is inside the pixmap boundaries
+        if 0 <= x < self.pixmap.width() and 0 <= y < self.pixmap.height():
+        # Get the RGB value of the clicked pixel
+          pixel_color = QColor(self.my_bestagon.pixel(x, y))
+          r, g, b, _ = pixel_color.getRgb()
+
+          # Check if the RGB value is (255, 0, 0) or (254, 255, 255)
+          if (r, g, b) in [(255, 0, 0), (254, 255, 255)]:
+              self.close()
+
+
+def main():
+    #If the user enters an invalid sized input, it closes the program.
+    #Examples: (./xgui [val] ...) or (./xgui)
+    #In this case, a valid input is (./xgui [val]) which has a sys.arg length of 2
+    if len(sys.argv) != 2:
+        #print("Usage: ./xgui [input]")
+        sys.exit(1)
+    #Purpose is to terminate the program if correctly formed input is not up to spec.
+    #Spec says a valid input is a positive, nonzero integer because 0 * size = no hexagon,
+    #and a negative hexagon does not exist in two or three dimensional space, as far as I am aware.
+    try:
+        size = int(sys.argv[1])
+        if size < 1:
+            raise ValueError("Input must be a positive integer") #error occurs because the program gets a value less than 1 for size.
+    except ValueError as e:
+        print(f"Error: got not integer value {e}") #error occurs because the program gets a non-positive numeric value.
+        sys.exit(1)
+
+    app = QApplication(sys.argv) #initialize the GUI.
+    window = Bestagon(size) #create a bestagon object
+    window.show() #put the bestagon in the gui window 
+    sys.exit(app.exec_()) #Close the program according to what occurs while the GUI window is open and the user interacts.
+    
+#The other 'python way' of calling (program).main()    
+if __name__ == "__main__":
+    main()

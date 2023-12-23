@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+import unittest
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtTest import QTest
+from PyQt5.QtCore import Qt, QPoint
+from xgui import Bestagon  # Import the Bestagon class from your script
+
+class TestMousePressEvent(unittest.TestCase):
+    def setUp(self):
+        self.app = QApplication([])
+
+    def tearDown(self):
+        self.app.exit()
+
+
+    def test_valid_click_outside_hexagon(self):
+        # Create a Bestagon instance with a size of 100
+        window = Bestagon(100)
+        window.show()
+
+        # Click outside the hexagon
+        QTest.mousePress(window, Qt.LeftButton, pos=window.rect().topLeft())
+        
+        # The window should remain open
+        self.assertTrue(window.isVisible())
+
+    def test_invalid_click_negative_coordinates(self):
+        # Create a Bestagon instance with a size of 100
+        window = Bestagon(100)
+        window.show()
+
+        # Click with negative coordinates
+        QTest.mousePress(window, Qt.LeftButton, pos=QPoint(-10, -10))
+        
+        # The window should remain open
+        self.assertTrue(window.isVisible())
+
+    def test_invalid_click_beyond_window(self):
+        # Create a Bestagon instance with a size of 100
+        window = Bestagon(100)
+        window.show()
+
+        # Click beyond the window boundaries
+        QTest.mousePress(window, Qt.LeftButton, pos=QPoint(1000, 1000))
+        
+        # The window should remain open
+        self.assertTrue(window.isVisible())
+
+    def test_click_edge_of_hexagon(self):
+        # Create a Bestagon instance with a size of 100
+        window = Bestagon(100)
+        window.show()
+
+        # Click on the edge of the hexagon
+        QTest.mousePress(window, Qt.LeftButton, pos=window.rect().topRight())
+        
+        # The window should remain open
+        self.assertTrue(window.isVisible())
+
+    def test_valid_click_on_hexagon_boundary(self):
+        # Create a Bestagon instance with a size of 100
+        window = Bestagon(100)
+        window.show()
+
+        # Click on the boundary of the hexagon
+        QTest.mousePress(window, Qt.LeftButton, pos=QPoint(window.rect().center().x(), window.rect().top()))
+        
+        # The window should remain open
+        self.assertTrue(window.isVisible())
+
+    def test_valid_click_on_hexagon_corner(self):
+        # Create a Bestagon instance with a size of 100
+        window = Bestagon(100)
+        window.show()
+
+        # Click on one of the hexagon's corners
+        QTest.mousePress(window, Qt.LeftButton, pos=window.rect().bottomRight())
+        
+        # The window should remain open
+        self.assertTrue(window.isVisible())
+
+    def test_valid_click_inside_hexagon_boundary(self):
+        # Create a Bestagon instance with a size of 100
+        window = Bestagon(100)
+        window.show()
+
+        # Click just inside the hexagon boundary
+        QTest.mousePress(window, Qt.LeftButton, pos=QPoint(window.rect().center().x(), window.rect().bottom()))
+        
+        # The window should remain open
+        self.assertTrue(window.isVisible())
+
+    def test_valid_click_inside_hexagon_corner(self):
+        # Create a Bestagon instance with a size of 100
+        window = Bestagon(100)
+        window.show()
+
+        # Click just inside one of the hexagon's corners
+        QTest.mousePress(window, Qt.LeftButton, pos=QPoint(window.rect().center().x(), window.rect().top() + 1))
+        
+        # The window should remain open
+        self.assertTrue(window.isVisible())
+
+if __name__ == '__main__':
+    unittest.main()
