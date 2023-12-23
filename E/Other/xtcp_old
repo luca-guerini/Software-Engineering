@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+import sys
+from twisted.internet import protocol, reactor, defer
+import json
+"""
+The core of Twisted is the reactor event loop. 
+The reactor knows about network, file system, and timer events. 
+It waits on and then handles these events, abstracting away platform-specific behavior 
+and presenting interfaces to make responding to events anywhere in the network stack easy.
+
+
+"""
+#Echo is a twisted subclass that defines behavior
+#of the server for a connected client.
+#In essence, it is a Protocol Class
+#In this case, its dataReceived method is overridden
+#with a print method that sends user input, which will always be
+#well-formed json, to stdout serverside.
+class Echo(protocol.Protocol):
+    """
+    def dataReceived(self, data):
+        # When data is received from a client, print it to stdout
+        print(data.decode(), end='')
+    """
+    def dataReceived(self, data):
+        try:
+            json_data = json.loads(data.decode())
+            processed_data = self.process_data(json_data)
+            print("Data received:")
+            print(data.decode(), end='')
+            self.transport.write(json.dumps(processed_data).encode() + b"\n")
+        except json.JSONDecodeError:
+            self.transport.write(b"Invalid JSON received\n")
+
+    def process_data(self, data):
+        # You can add your processing logic here
+        return data
+#In the Twisted Library, EchoFactory is a subclass
+#of 'twisted.internet.protocol.Factory', responsible for
+#creating instances of an Echo for each new client connection.
+#buildProtocol is overriden, and in this case it builds
+#the Echo I have defined above.
+#In summary, EchoFactory is a factory pattern that helps manage
+#and create instances of the Echo protocol class for different
+#client connections
+class EchoFactory(protocol.Factory):
+    def buildProtocol(self, addr):
+        return Echo()
+#This is a simple error method that prints
+#an error message when a client times out.
+def timeout_error():
+    print("Error: No client connection within the timeout.")
+    reactor.stop()
+#Execution behavior
+if __name__ == '__main__':
+    # Default port is 4567
+    port = 4567
+
+    # Check if a port number is provided as a command line argument
+    if len(sys.argv) > 1:
+        try:
+            port = int(sys.argv[1])
+        except ValueError:
+            print("Invalid port number. Using the default port 4567.")
+
+    # Create a TCP server using Twisted
+    #Port represents the port on which to host the connection
+    #EchoFactor
+    reactor.listenTCP(port, EchoFactory())
+    print(f"Server listening on port {port}. Press Ctrl+C to exit.")
+
+    # Schedule a timeout after 3 seconds
+    #reactor.callLater calls the timeout_error
+    #after the amount of seconds provided.
+    #At the moment it is 120, which is not according to spec
+    #because I have been trapped with a bug relating to TCP connections
+    #outside of loopback being denied. Help me guys!
+    timeout = reactor.callLater(120, timeout_error)
+
+    # on_client_connect(): Adds a callback to stop the reactor when a client connects
+    #Simple in behavior, if the timeout is active for a client,
+    #disable it for the duration of their connection.
+    def on_client_connect(result):
+        if timeout.active():
+            timeout.cancel()
+        return result
+    #Explanation of Following Subscript:
+    #addSystemEventTrigger is a reactor trigger
+    #that changes the behavior of the reactor
+    #in response to a trigger.
+    #In this case, it can be plainly said that
+    #'After' client 'connect,' disable a timeout for
+    #that client, so that information can be sent over
+    #tcp
+    reactor.addSystemEventTrigger('after', 'connect', on_client_connect)
+
+    reactor.run()

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ "$#" -eq 1 ]; then
+    # Get the port from the command-line argument
+    port="$1"
+else
+    # Default to port 4567 if no port is provided
+    port=4567
+fi
+
+
+# Call the run_xtcp.sh script with the port argument
+~/guerinlu/E/Other/xtcp "$port"

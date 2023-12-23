@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+
+from twisted.internet import reactor, protocol
+import json
+import xjson
+#Protocol is a twisted subclass that defines behavior
+#of the server for a connected client.
+class JSONProtocol(protocol.Protocol):
+    def connectionMade(self):
+        print("Client connected.")
+
+    def dataReceived(self, data):
+        input_str = data.decode()
+        print("Received data from client.")
+        #print(input_str)
+        # Process client input using process_json_sequence
+        result = xjson.process_json_sequence(input_str)
+
+        # Send the result back to the client
+        self.transport.write(result[0].encode() + b'\n')
+        self.transport.write(result[1].encode() + b'\n')
+        self.transport.loseConnection()  # Close the connection after sending data
+        
+    def connectionLost(self, reason):
+        # This method is called when the client disconnects
+        print("Client disconnected")
+        reactor.stop()
+    def timeoutConnection(self):
+        print("Client connection timed out.")
+        self.transport.loseConnection()  # Close the connection on timeout
+# protocol.Factory
+# is Responsible for generating factory patterns
+#of clients who connect.
+#buildProtocol is overriden, and in this case it builds
+#the JSONProtocol I have defined above.
+class JSONFactory(protocol.Factory):
+    def buildProtocol(self, addr):
+        return JSONProtocol()
+
+#This is a simple error method that prints
+#an error message when a client times out.
+def timeout_error():
+    print("Error: No client connection within the timeout.")
+    reactor.stop()
+if __name__ == "__main__":
+    from sys import argv
+
+    #isdigit checks if the string contains only digits "0-9", thus the if statement
+    #will reject nonpositive and noninteger inputs.
+    if len(argv) > 1 and argv[1].isdigit():
+        if int(argv[1]) < 65535:
+            port = int(argv[1])
+    else:
+        port = 4567  # Default port is 4567
+
+    reactor.listenTCP(port, JSONFactory())
+    #print(f"Listening on port {port}...")
+
+    # Schedule a timeout after 3 seconds
+    #reactor.callLater calls the timeout_error
+    #after the amount of seconds provided.
+    timeout = reactor.callLater(3, timeout_error)
+
+    # on_client_connect(): Adds a callback to stop the reactor when a client connects
+    #Simple in behavior, if the timeout is active for a client,
+    #disable it for the duration of their connection.
+    def on_client_connect(result):
+        if timeout.active():
+            timeout.cancel()
+        return result
+    #Explanation of Following Subscript:
+    #addSystemEventTrigger is a reactor trigger
+    #that changes the behavior of the reactor
+    #in response to a trigger.
+    #In this case, it can be plainly said that
+    #'After' client 'connect,' disable a timeout for
+    #that client, so that information can be sent over
+    #tcp
+    reactor.addSystemEventTrigger('after', 'connect', on_client_connect)
+    reactor.run()
+
+#TO-DO:
+#Now that the disconnect bug is resolved, I need to use twisted's testing framework
+#to create some good tests.
+#https://docs.twisted.org/en/stable/development/test-standard.html
+
+
